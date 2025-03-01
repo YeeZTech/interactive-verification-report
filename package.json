@@ -1,0 +1,22 @@
+{
+  "name": "interactive-verification-report",
+  "version": "1.0.0",
+  "description": "Interactive Verification Report for Fidelius",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "YeeZTech",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/preset-env": "^7.26.9",
+    "@yeez-tech/meta-encryptor": "^3.0.2",
+    "express": "^4.21.2",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@jest/transform": "^29.7.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}
