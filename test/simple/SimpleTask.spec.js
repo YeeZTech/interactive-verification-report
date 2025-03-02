@@ -32,9 +32,14 @@ const storage_config = JSON.parse(`{
     "data_dir":"${__dirname}"
     }`);
 
-test("simple code", async()=>{
-    init_vrdaemon(meta_provider, 4698, __dirname);
+    afterAll(() => {
+        close_vrdaemon();
+      });
 
+test("simple code", async()=>{
+    init_vrdaemon(meta_provider, 4698, storage_config, __dirname);
+
+    //simulate encrypted report, save to "dst"
     const inputString = "Hello, this is a test string.";
     const rs = Readable.from(inputString);
     const dst = path.join(__dirname, "encrypted_report.data")
@@ -46,15 +51,15 @@ test("simple code", async()=>{
     await new Promise(resolve=>{
             ws.on('finish', ()=>resolve());
     })
+
+    //process report
     await new Promise((resolve)=>{
-        process_verfication_report(meta_provider, "req_abcdefg", storage_config, dst, ()=>{
+        process_verfication_report(meta_provider, "req_abcdefg", dst, ()=>{
             resolve();
         })})
 
-        console.log("start api request")
-        const app = get_express_instance();
-            console.log("issue api request")
-            const response = await request(app).get('/api/report').query({request_hash: "req_abcdefg"});
-            console.log("response: ", response)
-            close_vrdaemon();
+    const app = get_express_instance();
+    const response = await request(app).get('/api/report').query({request_hash: "req_abcdefg"});
+    console.log("response: ", response.body)
+    
 })

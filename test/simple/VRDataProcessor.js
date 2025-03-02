@@ -13,3 +13,4 @@ function process_report(storage_context, enclave_hash, request_hash, report){
     return meta
 }
 
+export default process_report
