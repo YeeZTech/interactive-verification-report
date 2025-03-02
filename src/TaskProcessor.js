@@ -9,7 +9,7 @@ const { report } = require('node:process');
 var log = require("loglevel").getLogger("interactive-verification-report/TaskProcessor");
 
 parentPort.on('message', (task) => {
-    const storage = task.storage_config
+    const storage = task.storage
     const meta_provider = task.meta
     const all_handler = task.handler
 

@@ -13,15 +13,15 @@ let app = undefined;
 let all_handler = undefined
 let api_server = undefined
 let meta_file_dir=undefined
-let _storage_config = undefined
-
+let _storage_context = undefined
+let _meta_provider = undefined
 
 export const get_express_instance = function(){
   return app;
 }
 
 
-export const init_vrdaemon =  function(meta_provider, port, storage_config, all_meta_file_dir = "./"){
+export const init_vrdaemon =  function(meta_provider, port, storage_context, all_meta_file_dir = "./"){
   pool = new WorkerPool(path.resolve(__dirname, 'TaskProcessor.js'), os.availableParallelism());
   app = express()
   app.use(bodyParser.json()); // 支持 JSON 格式的请求体
@@ -31,7 +31,8 @@ export const init_vrdaemon =  function(meta_provider, port, storage_config, all_
   }
 
   meta_file_dir = all_meta_file_dir
-  _storage_config = storage_config
+  _storage_context = storage_context
+  _meta_provider = meta_provider
   // 定义一个 API 接口，接受 request_hash 和参数
   app.get('/api/report', (req, res) => {
     const { request_hash, params } = req.query; // 获取 request_hash 和参数
@@ -44,7 +45,7 @@ export const init_vrdaemon =  function(meta_provider, port, storage_config, all_
 
       try {
         // 根据 enclave_hash 动态加载并执行处理
-        const enclaveHandler = await loadInteractiveHandler(all_handler, code_dir(_storage_config), meta_provider, enclave_hash);
+        const enclaveHandler = await loadInteractiveHandler(all_handler, code_dir(_storage_context), meta_provider, enclave_hash);
 
         const meta_file = path.join(meta_file_dir, request_hash + ".meta")
 
@@ -78,13 +79,13 @@ export const close_vrdaemon = function (){
   }
 }
 
-export const  process_verfication_report = async function(meta_provider, 
+export const  process_verfication_report = async function( 
   request_hash,
   local_encrypted_report_url, callback){
 
-    pool.runTask({storage_config:_storage_config,
+    pool.runTask({storage:_storage_context,
       report:local_encrypted_report_url,
-      meta: meta_provider,
+      meta: _meta_provider,
       handler:all_handler,
       meta_file_dir: meta_file_dir,
       request_hash: request_hash

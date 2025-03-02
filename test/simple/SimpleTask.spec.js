@@ -54,7 +54,7 @@ test("simple code", async()=>{
 
     //process report
     await new Promise((resolve)=>{
-        process_verfication_report(meta_provider, "req_abcdefg", dst, ()=>{
+        process_verfication_report( "req_abcdefg", dst, ()=>{
             resolve();
         })})
 

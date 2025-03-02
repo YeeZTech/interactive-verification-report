@@ -15,14 +15,11 @@
 }
 
 class MetaAPIProvider extends MetaProvider{
-    async getDataProcessorCode(enclave_hash){
-        return "xxx"
-    }
+    async getDataProcessorCode(enclave_hash){}
 
-    async getInteractorCode(enclave_hash){
-
-    }
+    async getInteractorCode(enclave_hash){}
     async getShuPrivateKey(){}
+    async getEnclaveHash(request_hash){}
 }
 
 export default MetaProvider
