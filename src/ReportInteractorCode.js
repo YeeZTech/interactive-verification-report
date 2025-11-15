@@ -1,7 +1,6 @@
-export class ReportInteractorCode {
+class ReportInteractorCode {
     constructor() {
         this.map = new Map();
-
         //TODO 未来启用
         //this.interval = setInterval(this.decrementCounters.bind(this), 60000); // 每分钟调用一次
     }
@@ -40,3 +39,5 @@ export class ReportInteractorCode {
         clearInterval(this.interval);
     }
 }
+
+module.exports = ReportInteractorCode;

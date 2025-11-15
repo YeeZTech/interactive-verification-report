@@ -4,7 +4,8 @@
   "description": "Interactive Verification Report for Fidelius",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "example": "node example/server.js"
   },
   "author": "YeeZTech",
   "license": "ISC",

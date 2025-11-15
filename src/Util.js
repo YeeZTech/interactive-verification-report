@@ -54,19 +54,20 @@ const loadInteractiveHandler = async function (all_interactor_code, code_dir, me
     }
   }
 
-const loadDataProcessorHandler = async function (all_interactor_code, code_dir, meta_provider, enclaveHash) {
+const loadDataProcessorHandler = async function (all_processor_code, code_dir, processor_code, enclaveHash) {
     try {
+      console.log("processor_code: ", processor_code);
         //使用缓存，避免频繁读取文件
-        var enclaveHandler = all_interactor_code.access(processorCodeKey(enclaveHash))
+        var enclaveHandler = all_processor_code.access(processorCodeKey(enclaveHash))
         if(enclaveHandler === null){
           // 根据 enclave_hash 动态加载对应的模块
           
           var modulePath = path.join(code_dir, `${enclaveHash}_data_processor.js`);
           if(true/*!fs.existsSync(modulePath)*/){
-            fs.writeFileSync(modulePath, await meta_provider.getInteractorCode(enclaveHash));
+            fs.writeFileSync(modulePath, processor_code);
           }
           enclaveHandler = require(modulePath);
-          all_interactor_code.add(processorCodeKey(enclaveHash), enclaveHandler);
+          all_processor_code.add(processorCodeKey(enclaveHash), enclaveHandler);
         }
         
         // 校验并执行动态加载的模块，传递不同的参数

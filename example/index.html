@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Interactive Verification Report Demo</title>
+    <style>
+      :root { --bg: #0b1220; --fg: #e6e8ee; --muted: #9aa4b2; --accent: #5b8cff; }
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--fg); }
+      header, footer { padding: 16px 24px; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.06); }
+      footer { border-top: 1px solid rgba(255,255,255,0.06); border-bottom: none; }
+      .wrap { max-width: 960px; margin: 0 auto; }
+  main { min-height: calc(100vh - 140px); display: flex; align-items: stretch; }
+  .content { flex: 1; padding: 24px; display: grid; gap: 16px; align-content: start; }
+      .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      input[type="text"] { flex: 1; min-width: 260px; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.02); color: var(--fg); }
+      button { padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12); background: var(--accent); color: white; cursor: pointer; }
+      button:disabled { opacity: .6; cursor: not-allowed; }
+      .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; }
+      .muted { color: var(--muted); }
+      pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <strong>Interactive Verification Report</strong>
+        <span class="muted">· 网页动态加载演示</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="wrap content">
+        <div class="card toolbar">
+          <input id="hashInput" type="text" value="req_abcdefg" placeholder="输入 request_hash，例如 req_abcdefg" />
+          <button id="loadBtn">加载报告</button>
+          <button id="refreshBtn" title="刷新列表">刷新列表</button>
+          <span id="status" class="muted"></span>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <strong>可用请求列表</strong>
+            <span class="muted">来自 /api/list</span>
+          </div>
+          <div style="overflow:auto;margin-top:8px;">
+            <table id="listTable" style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">request_hash</th>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">enclave_hash</th>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">data</th>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">meta</th>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">VRDataProcessor</th>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">VRInteractor</th>
+                  <th style="text-align:left;padding:8px;border-bottom:1px solid rgba(255,255,255,0.1);">操作</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="report" class="card">
+          <div class="muted">报告内容</div>
+          <div id="reportContent" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; min-height: 80px; overflow:auto;">尚未加载</div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap muted">示例页 · 顶部和底部为头部区域，中间为用于呈现报告的 DOM 容器</div>
+    </footer>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+  const hashInput = $("hashInput");
+  const loadBtn = $("loadBtn");
+  const refreshBtn = $("refreshBtn");
+  const status = $("status");
+  const reportContent = $("reportContent");
+  const listTableBody = document.querySelector('#listTable tbody');
+
+      async function loadReport() {
+        const request_hash = hashInput.value.trim();
+        if (!request_hash) { alert('请填写 request_hash'); return; }
+        loadBtn.disabled = true; status.textContent = '加载中...';
+        reportContent.textContent = '加载中...';
+        try {
+          const resp = await fetch(`/api/report?request_hash=${encodeURIComponent(request_hash)}`);
+          if (resp.status === 304) { status.textContent = '未更改(304)'; return; }
+          const data = await resp.json();
+          if (!resp.ok || !data.success) throw new Error((data && data.error && data.error.message) || '请求失败');
+          if (typeof data.result === 'string') {
+            // 交互器返回 HTML 字符串
+            reportContent.innerHTML = data.result;
+            // 点击事件的响应逻辑已内嵌在 abcd_interactor 返回的 HTML 中
+          } else {
+            reportContent.textContent = JSON.stringify(data.result, null, 2);
+          }
+          status.textContent = '加载完成';
+        } catch (e) {
+          status.textContent = '加载失败';
+          reportContent.textContent = String(e);
+        } finally { loadBtn.disabled = false; }
+      }
+
+      async function refreshList() {
+        try {
+          const resp = await fetch('/api/list');
+          const data = await resp.json();
+          if (!resp.ok || !data.success) throw new Error(data.message || '请求失败');
+          const rows = (data.result || []).map(item => {
+            const toCell = (v) => `<td style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.06);">${v ? String(v) : '<span class=\'muted\'>—</span>'}</td>`;
+            return `<tr data-hash="${item.request_hash}">
+              ${toCell(item.request_hash)}
+              ${toCell(item.enclave_hash)}
+              ${toCell(item.files.data)}
+              ${toCell(item.files.meta)}
+              ${toCell(item.files.dataProcessor)}
+              ${toCell(item.files.interactor)}
+              <td style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                <button data-action="select" data-hash="${item.request_hash}">选择</button>
+              </td>
+            </tr>`;
+          }).join('');
+          listTableBody.innerHTML = rows || '<tr><td class="muted" colspan="7" style="padding:8px;">暂无数据</td></tr>';
+        } catch (e) {
+          listTableBody.innerHTML = `<tr><td class="muted" colspan="7" style="padding:8px;">加载失败：${String(e)}</td></tr>`;
+        }
+      }
+
+      listTableBody.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action="select"]');
+        if (!btn) return;
+        const h = btn.getAttribute('data-hash');
+        hashInput.value = h;
+        loadReport();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      loadBtn.addEventListener('click', loadReport);
+      refreshBtn.addEventListener('click', refreshList);
+      // 页面初始化
+      window.addEventListener('DOMContentLoaded', () => { loadReport(); refreshList(); });
+    </script>
+  </body>
+  </html>

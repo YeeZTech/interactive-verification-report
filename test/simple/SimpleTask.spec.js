@@ -37,6 +37,13 @@ const storage_config = JSON.parse(`{
       });
 
 test("simple code", async()=>{
+    console.log("test: ", meta_provider);
+    console.log(
+          "meta_provider type:",
+          typeof meta_provider,
+          "| constructor:",
+          meta_provider?.constructor?.name ?? "unknown"
+        );
     init_vrdaemon(meta_provider, 4698, storage_config, __dirname);
 
     //simulate encrypted report, save to "dst"
@@ -51,15 +58,15 @@ test("simple code", async()=>{
     await new Promise(resolve=>{
             ws.on('finish', ()=>resolve());
     })
-
+    
     //process report
+    
     await new Promise((resolve)=>{
         process_verfication_report( "req_abcdefg", dst, ()=>{
             resolve();
         })})
-
+            
     const app = get_express_instance();
     const response = await request(app).get('/api/report').query({request_hash: "req_abcdefg"});
     console.log("response: ", response.body)
-    
 })
